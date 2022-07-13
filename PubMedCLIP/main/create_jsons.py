@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def _imgpath(img_dir, name):
-    img_path = os.path.join(img_dir, name)
+    img_path = os.path.join(img_dir, name + ".jpg")
     if not os.path.exists(img_path):
         return "nofile"
     return img_path
@@ -24,27 +24,26 @@ def _imgsize(img_path):
     size = os.path.getsize(img_path)
     return size
 
-
+def _read_captions(dir_path):
+    full_path = os.path.join(dir_path, "radiology", "captions.txt")
+    return pd.read_csv(full_path, sep='\t', names=['name', 'caption'])
 
 def create_jsons(train_path, validation_path, test_path, jsonpath):
     # read data
-    train_df = pd.read_csv(os.path.join(train_path, "radiologytraindata.csv"))
-    validation_df = pd.read_csv(os.path.join(validation_path, "radiologyvaldata.csv"))
-    test_df = pd.read_csv(os.path.join(test_path, "radiologytestdata.csv"))
+    train_df = _read_captions(train_path)
+    validation_df = _read_captions(validation_path)
+    test_df = _read_captions(test_path)
 
-    assert len(train_df.columns) == 3 
-    assert len(validation_df.columns) == 3 
-    assert len(test_df.columns) == 3 
+    assert len(train_df.columns) == 2
+    assert len(validation_df.columns) == 2 
+    assert len(test_df.columns) == 2 
 
-    assert "id" and "name" and "caption" in train_df.columns
-    assert "id" and "name" and "caption" in validation_df.columns
-    assert "id" and "name" and "caption" in test_df.columns
+    assert "name" and "caption" in train_df.columns
+    assert "name" and "caption" in validation_df.columns
+    assert "name" and "caption" in test_df.columns
 
     # convert df rows to dict
     logger.info("Converting each row in dataframe to dictionary...")
-    train_df.drop(columns=['id'], inplace=True)
-    validation_df.drop(columns=['id'], inplace=True)
-    test_df.drop(columns=['id'], inplace=True)
 
     ## add full image paths
     train_image_dir = os.path.join(os.path.join(train_path, "radiology", "images"))
